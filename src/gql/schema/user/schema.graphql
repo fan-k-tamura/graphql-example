@@ -1,0 +1,62 @@
+# ユーザー関連のクエリ
+extend type Query {
+  """単一ユーザーの取得"""
+  user(id: ID!): User
+  """複数ユーザーをまとめて読み込む例"""
+  users(ids: [ID!]!): [User!]!
+}
+
+# ユーザー詳細をまとめて更新する Mutation 例
+extend type Mutation {
+  updateUserDetails(input: UpdateUserDetailsInput!): UpdateUserDetailsPayload!
+}
+
+"""配送先・プロフィール付きのユーザー"""
+type User {
+  id: ID!
+  name: String!
+  addresses: [Address!]!
+  profile: Profile
+}
+
+"""配送先情報"""
+type Address {
+  code: String!
+  address: String!
+  tel: String!
+}
+
+"""1:1 のプロフィール情報"""
+type Profile {
+  address: String!
+  tel: String!
+}
+
+input UpdateUserDetailsInput {
+  clientMutationId: String
+  userId: ID!
+  userPatch: UserPatchInput
+  profilePatch: ProfilePatchInput
+  addresses: [AddressInput!]
+}
+
+input UserPatchInput {
+  name: String
+}
+
+input ProfilePatchInput {
+  address: String
+  tel: String
+  clear: Boolean
+}
+
+input AddressInput {
+  code: String!
+  address: String!
+  tel: String!
+}
+
+type UpdateUserDetailsPayload {
+  clientMutationId: String
+  user: User!
+}

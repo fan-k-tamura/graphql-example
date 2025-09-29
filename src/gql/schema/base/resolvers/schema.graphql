@@ -1,0 +1,39 @@
+# ルートクエリ (個別の schema ファイルで extend する想定)
+type Query
+
+# Mutation を拡張できるよう空定義を用意しておく。
+type Mutation
+type Subscription
+"""Relay で node(id: …) に対応する共通インターフェース"""
+interface Node {
+  """Relay 互換の Global ID"""
+  id: ID!
+}
+
+extend type Query {
+  node(id: ID!): Node
+}
+
+"""Relay Connection のページ情報"""
+type PageInfo {
+  """このページの最初のカーソル"""
+  startCursor: String
+  """このページの最後のカーソル"""
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}
+
+"""offset / limit ページング用のページ情報"""
+type OffsetPageInfo {
+  offset: Int!
+  limit: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}
+
+"""昇順 / 降順"""
+enum SortDirection {
+  ASC
+  DESC
+}

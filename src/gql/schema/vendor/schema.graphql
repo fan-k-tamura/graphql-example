@@ -1,0 +1,24 @@
+# 仕入先関連のクエリ
+extend type Query {
+  """単一仕入先"""
+  vendor(id: ID!): Vendor
+  """offset/limit ページングの例"""
+  vendors(offset: Int!, limit: Int!): VendorsPage!
+}
+
+"""仕入先の基本情報"""
+type Vendor {
+  id: ID!
+  name: String!
+  category: String!
+  location: String!
+  contactEmail: String!
+  phone: String!
+}
+
+"""仕入先一覧のページングレスポンス"""
+type VendorsPage {
+  items: [Vendor!]!
+  totalCount: Int!
+  pageInfo: OffsetPageInfo!
+}

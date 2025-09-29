@@ -1,0 +1,21 @@
+extend type Query {
+  announcements(first: Int!, after: String): AnnouncementConnection!
+}
+
+type Announcement implements Node {
+  id: ID!
+  title: String!
+  content: String!
+  publishedAt: String!
+}
+
+type AnnouncementConnection {
+  edges: [AnnouncementEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type AnnouncementEdge {
+  cursor: String!
+  node: Announcement!
+}

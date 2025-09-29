@@ -1,0 +1,287 @@
+"""配送先情報"""
+type Address {
+  address: String!
+  code: String!
+  tel: String!
+}
+
+input AddressInput {
+  address: String!
+  code: String!
+  tel: String!
+}
+
+type Announcement implements Node {
+  content: String!
+  id: ID!
+  publishedAt: String!
+  title: String!
+}
+
+type AnnouncementConnection {
+  edges: [AnnouncementEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type AnnouncementEdge {
+  cursor: String!
+  node: Announcement!
+}
+
+"""商品を追加する際の入力"""
+input CreateProductInput {
+  clientMutationId: String
+  description: String!
+  name: String!
+  price: Int!
+}
+
+"""createProduct のレスポンス"""
+type CreateProductPayload {
+  clientMutationId: String
+  product: Product!
+}
+
+input DeleteProductInput {
+  clientMutationId: String
+  id: ID!
+}
+
+"""deleteProduct のレスポンス"""
+type DeleteProductPayload {
+  clientMutationId: String
+  deletedProductId: ID!
+  product: Product
+}
+
+type Mutation {
+  """新しい商品を仮保存する。レスポンスには Global ID を含める。"""
+  createProduct(input: CreateProductInput!): CreateProductPayload!
+
+  """商品を論理削除する例。ID は Global ID。"""
+  deleteProduct(input: DeleteProductInput!): DeleteProductPayload!
+
+  """注文のステータスを変更し、最新状態を返す"""
+  updateOrderStatus(input: UpdateOrderStatusInput!): UpdateOrderStatusPayload!
+
+  """既存商品を部分更新する。ID は Global ID を渡す。"""
+  updateProduct(input: UpdateProductInput!): UpdateProductPayload!
+  updateUserDetails(input: UpdateUserDetailsInput!): UpdateUserDetailsPayload!
+}
+
+"""Relay で node(id: …) に対応する共通インターフェース"""
+interface Node {
+  """Relay 互換の Global ID"""
+  id: ID!
+}
+
+"""offset / limit ページング用のページ情報"""
+type OffsetPageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  limit: Int!
+  offset: Int!
+}
+
+"""ユーザー・明細付き注文"""
+type Order {
+  id: ID!
+  items: [OrderLine!]!
+  status: OrderStatus!
+  total: Int!
+  user: User!
+}
+
+"""注文明細（サンプルでは明細ごとの小計を持つ）"""
+type OrderLine {
+  id: ID!
+  product: Product!
+  productId: ID!
+  productName: String!
+  quantity: Int!
+  subtotal: Int!
+  unitPrice: Int!
+}
+
+"""注文ステータス"""
+enum OrderStatus {
+  DELIVERED
+  PENDING
+  SHIPPED
+}
+
+"""注文一覧のページングレスポンス"""
+type OrdersPage {
+  items: [Order!]!
+  pageInfo: OffsetPageInfo!
+  totalCount: Int!
+}
+
+"""Relay Connection のページ情報"""
+type PageInfo {
+  """このページの最後のカーソル"""
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+
+  """このページの最初のカーソル"""
+  startCursor: String
+}
+
+"""Relay Node 対応の Product"""
+type Product implements Node {
+  description: String!
+  id: ID!
+  name: String!
+  price: Int!
+}
+
+"""Relay Connection で返す構造"""
+type ProductConnection {
+  edges: [ProductEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+"""Product を包む Edge、Cursor は data 層で生成"""
+type ProductEdge {
+  cursor: String!
+  node: Product!
+}
+
+input ProductFilterInput {
+  category: String
+}
+
+input ProductOrderByInput {
+  direction: SortDirection!
+  field: ProductOrderField!
+}
+
+enum ProductOrderField {
+  NAME
+  PRICE
+}
+
+"""1:1 のプロフィール情報"""
+type Profile {
+  address: String!
+  tel: String!
+}
+
+input ProfilePatchInput {
+  address: String
+  clear: Boolean
+  tel: String
+}
+
+type Query {
+  announcements(after: String, first: Int!): AnnouncementConnection!
+  node(id: ID!): Node
+  orders(limit: Int!, offset: Int!): OrdersPage!
+
+  """単一商品を Global ID なしで取得"""
+  product(id: ID!): Product
+
+  """Relay Connection で商品一覧をページング"""
+  products(after: String, filter: ProductFilterInput, first: Int!, orderBy: ProductOrderByInput): ProductConnection!
+
+  """単一ユーザーの取得"""
+  user(id: ID!): User
+
+  """複数ユーザーをまとめて読み込む例"""
+  users(ids: [ID!]!): [User!]!
+
+  """単一仕入先"""
+  vendor(id: ID!): Vendor
+
+  """offset/limit ページングの例"""
+  vendors(limit: Int!, offset: Int!): VendorsPage!
+}
+
+"""昇順 / 降順"""
+enum SortDirection {
+  ASC
+  DESC
+}
+
+type Subscription {
+  """指定した注文のステータス変更をリアルタイムで受け取る"""
+  orderStatusChanged(orderId: ID!): Order!
+  productUpdated(productId: ID!): Product!
+}
+
+"""注文ステータス更新の入力"""
+input UpdateOrderStatusInput {
+  clientMutationId: String
+  id: ID!
+  status: OrderStatus!
+}
+
+"""注文ステータス更新のレスポンス"""
+type UpdateOrderStatusPayload {
+  clientMutationId: String
+  order: Order!
+}
+
+"""商品更新時の入力。patch は差分のみ渡す想定"""
+input UpdateProductInput {
+  clientMutationId: String
+  id: ID!
+  patch: UpdateProductPatch!
+}
+
+input UpdateProductPatch {
+  description: String
+  name: String
+  price: Int
+}
+
+"""updateProduct のレスポンス"""
+type UpdateProductPayload {
+  clientMutationId: String
+  product: Product!
+}
+
+input UpdateUserDetailsInput {
+  addresses: [AddressInput!]
+  clientMutationId: String
+  profilePatch: ProfilePatchInput
+  userId: ID!
+  userPatch: UserPatchInput
+}
+
+type UpdateUserDetailsPayload {
+  clientMutationId: String
+  user: User!
+}
+
+"""配送先・プロフィール付きのユーザー"""
+type User {
+  addresses: [Address!]!
+  id: ID!
+  name: String!
+  profile: Profile
+}
+
+input UserPatchInput {
+  name: String
+}
+
+"""仕入先の基本情報"""
+type Vendor {
+  category: String!
+  contactEmail: String!
+  id: ID!
+  location: String!
+  name: String!
+  phone: String!
+}
+
+"""仕入先一覧のページングレスポンス"""
+type VendorsPage {
+  items: [Vendor!]!
+  pageInfo: OffsetPageInfo!
+  totalCount: Int!
+}

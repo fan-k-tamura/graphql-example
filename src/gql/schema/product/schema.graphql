@@ -1,0 +1,107 @@
+# 商品クエリと Relay Connection のサンプル
+extend type Query {
+  """単一商品を Global ID なしで取得"""
+  product(id: ID!): Product
+  """Relay Connection で商品一覧をページング"""
+  products(
+    first: Int!
+    after: String
+    filter: ProductFilterInput
+    orderBy: ProductOrderByInput
+  ): ProductConnection!
+}
+
+"""Relay Node 対応の Product"""
+type Product implements Node {
+  id: ID!
+  name: String!
+  price: Int!
+  description: String!
+}
+
+"""Relay Connection で返す構造"""
+type ProductConnection {
+  edges: [ProductEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+"""Product を包む Edge、Cursor は data 層で生成"""
+type ProductEdge {
+  cursor: String!
+  node: Product!
+}
+
+input ProductFilterInput {
+  category: String
+}
+
+input ProductOrderByInput {
+  field: ProductOrderField!
+  direction: SortDirection!
+}
+
+enum ProductOrderField {
+  NAME
+  PRICE
+}
+
+# 商品に関する変更系の例
+extend type Mutation {
+  """新しい商品を仮保存する。レスポンスには Global ID を含める。"""
+  createProduct(input: CreateProductInput!): CreateProductPayload!
+  """既存商品を部分更新する。ID は Global ID を渡す。"""
+  updateProduct(input: UpdateProductInput!): UpdateProductPayload!
+  """商品を論理削除する例。ID は Global ID。"""
+  deleteProduct(input: DeleteProductInput!): DeleteProductPayload!
+}
+
+# 更新された Product をストリーミングする Subscription
+extend type Subscription {
+  productUpdated(productId: ID!): Product!
+}
+
+"""商品を追加する際の入力"""
+input CreateProductInput {
+  clientMutationId: String
+  name: String!
+  price: Int!
+  description: String!
+}
+
+"""createProduct のレスポンス"""
+type CreateProductPayload {
+  clientMutationId: String
+  product: Product!
+}
+
+"""商品更新時の入力。patch は差分のみ渡す想定"""
+input UpdateProductInput {
+  clientMutationId: String
+  id: ID!
+  patch: UpdateProductPatch!
+}
+
+input UpdateProductPatch {
+  name: String
+  price: Int
+  description: String
+}
+
+"""updateProduct のレスポンス"""
+type UpdateProductPayload {
+  clientMutationId: String
+  product: Product!
+}
+
+input DeleteProductInput {
+  clientMutationId: String
+  id: ID!
+}
+
+"""deleteProduct のレスポンス"""
+type DeleteProductPayload {
+  clientMutationId: String
+  deletedProductId: ID!
+  product: Product
+}

@@ -1,0 +1,61 @@
+# 注文一覧を offset/limit ページングで返す例
+extend type Query {
+  orders(offset: Int!, limit: Int!): OrdersPage!
+}
+
+"""注文ステータス"""
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+}
+
+"""ユーザー・明細付き注文"""
+type Order {
+  id: ID!
+  status: OrderStatus!
+  total: Int!
+  user: User!
+  items: [OrderLine!]!
+}
+
+"""注文明細（サンプルでは明細ごとの小計を持つ）"""
+type OrderLine {
+  id: ID!
+  productId: ID!
+  product: Product!
+  productName: String!
+  quantity: Int!
+  unitPrice: Int!
+  subtotal: Int!
+}
+
+"""注文一覧のページングレスポンス"""
+type OrdersPage {
+  items: [Order!]!
+  totalCount: Int!
+  pageInfo: OffsetPageInfo!
+}
+
+"""注文ステータス更新の入力"""
+input UpdateOrderStatusInput {
+  clientMutationId: String
+  id: ID!
+  status: OrderStatus!
+}
+
+"""注文ステータス更新のレスポンス"""
+type UpdateOrderStatusPayload {
+  clientMutationId: String
+  order: Order!
+}
+
+extend type Mutation {
+  """注文のステータスを変更し、最新状態を返す"""
+  updateOrderStatus(input: UpdateOrderStatusInput!): UpdateOrderStatusPayload!
+}
+
+extend type Subscription {
+  """指定した注文のステータス変更をリアルタイムで受け取る"""
+  orderStatusChanged(orderId: ID!): Order!
+}
